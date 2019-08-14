@@ -1,19 +1,17 @@
-from urllib.parse import urlparse
-
-from bs4 import BeautifulSoup
 import requests
+from bs4 import BeautifulSoup
 import pytest
 
 from .exceptions import ArticleNotFound
 from .html_tools import remove_buzz_attrs, remove_buzz_tags, remove_all_tags
 
 
-def sanitize(html, url, plaintext=False):
+def sanitize(html, plaintext=False):
     soup = BeautifulSoup(html, 'html.parser')
     articles = soup.select("article.article")
 
     if len(articles) != 1:
-        raise ArticleNotFound(urlparse(url).hostname)
+        raise ArticleNotFound()
 
     title = soup.find_all(class_='article-header__title')[0].string
     article = articles[0]
@@ -35,7 +33,7 @@ def sanitize(html, url, plaintext=False):
     else:
         remove_all_tags(article)
         text = article.get_text()
-    return title, text.strip()
+    return text.strip()
 
 
 def test_sanitize():
@@ -62,6 +60,8 @@ def test_sanitize():
     assert '<h1>' not in clean_plaintext
     assert '</article>' not in clean_plaintext
     assert '<h1>' not in clean_plaintext
+
+
 
 def test_sanitize_wrong_url():
     resp = requests.get('http://example.com')

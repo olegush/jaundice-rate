@@ -89,3 +89,6 @@ local_settings.py
 .env
 db.sqlite3
 media/
+tmp.py
+.pytest_cache
+main.py

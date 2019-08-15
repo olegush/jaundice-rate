@@ -1,6 +1,6 @@
 from enum import Enum
 from functools import partial
-from itertools import zip_longest
+from collections import OrderedDict
 
 from aiohttp import web
 import aiohttp
@@ -71,7 +71,7 @@ async def process_article(session, morph, charged_words, url, timeouts):
         status = ProcessingStatus.PARSING_ERROR.name
     except asyncio.TimeoutError:
         status = ProcessingStatus.TIMEOUT.name
-    return dict(zip_longest(['status', 'url', 'score', 'words_count'], [status, url, score, words_count], fillvalue=None))
+    return OrderedDict(zip(['status', 'url', 'score', 'words_count'], [status, url, score, words_count]))
 
 
 async def coro_test_process_article(session, url, timeouts, asserting):
@@ -86,7 +86,7 @@ async def main_test_process_article():
                 session,
                 'https://lenta.ru/news/2019/07/25/moshennichestvo/',
                 {'fetch': 30, 'split': 3},
-                {"status": "PAR*SING_ERROR", "url": "https://lenta.ru/news/2019/07/25/moshennichestvo/", "score": None, "words_count": None}
+                {"status": "PARSING_ERROR", "url": "https://lenta.ru/news/2019/07/25/moshennichestvo/", "score": None, "words_count": None}
             )))
             tasks.append(nursery.start_soon(coro_test_process_article(
                 session,

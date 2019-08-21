@@ -92,3 +92,4 @@ media/
 tmp.py
 .pytest_cache
 main.py
+Dockerfile

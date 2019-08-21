@@ -51,13 +51,8 @@ def get_charged_words(path):
 
 async def fetch(session, url, timeout_fetch):
     timeout = ClientTimeout(total=timeout_fetch)
-    async with session.get(url, timeout=timeout) as response:
+    async with session.get(url, timeout=timeout, raise_for_status=True) as response:
         return await response.text()
-
-    #async with timeout(timeout_fetch):
-    #    async with session.get(url) as response:
-    #        response.raise_for_status()
-    #        return await response.text()
 
 
 async def process_article(session, morph, charged_words, url, timeouts):
@@ -80,32 +75,31 @@ async def process_article(session, morph, charged_words, url, timeouts):
 
 
 async def coro_test_process_article(session, url, timeouts, asserting):
-    assert await process_article(session, morph, CHARGED_WORDS, url, timeouts) == asserting
+    charged_words = get_charged_words(CHARGED_NEG_WORDS_PATH) +  get_charged_words(CHARGED_POS_WORDS_PATH)
+    assert await process_article(session, morph, charged_words, url, timeouts) == asserting
 
 
 async def main_test_process_article():
     async with aiohttp.ClientSession() as session:
         async with create_handy_nursery() as nursery:
-            tasks = []
-            tasks.append(nursery.start_soon(coro_test_process_article(
+            nursery.start_soon(coro_test_process_article(
                 session,
                 'https://lenta.ru/news/2019/07/25/moshennichestvo/',
                 {'fetch': 30, 'split': 3},
                 {"status": "PARSING_ERROR", "url": "https://lenta.ru/news/2019/07/25/moshennichestvo/", "score": None, "words_count": None}
-            )))
-            tasks.append(nursery.start_soon(coro_test_process_article(
+            ))
+            nursery.start_soon(coro_test_process_article(
                 session,
                 'https://inosmi.ru/politic/20190725/2455919834.html',
                 {'fetch': 30, 'split': 3},
                 {"status": "CONN_ERROR", "url": "https://inosmi.ru/politic/20190725/2455919834.html", "score": None, "words_count": None},
-            )))
-            tasks.append(nursery.start_soon(coro_test_process_article(
+            ))
+            nursery.start_soon(coro_test_process_article(
                 session,
                 'https://inosmi.ru/politic/20190813/245623806.html',
-                {'fetch': 30, 'split': 0.1},
+                {'fetch': 30, 'split': 0.001},
                 {"status": "TIMEOUT", "url": "https://inosmi.ru/politic/20190813/245623806.html", "score": None, "words_count": None},
-            )))
-        tasks_resulted, _ = await asyncio.wait(tasks)
+            ))
 
 
 def test_process_article():
